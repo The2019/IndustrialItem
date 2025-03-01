@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block title %}Upload Document{% endblock %}
+
+{% block content %}
+    <h1>Upload Document</h1>
+    <form method="POST" enctype="multipart/form-data">
+        {{ form.hidden_tag() }}
+
+        <!-- Name Field -->
+        <div class="mb-3">
+            {{ form.name.label }}
+            {{ form.name(class="form-control") }}
+        </div>
+
+        <!-- Category Field with Select Menu -->
+        <div class="mb-3">
+            {{ form.category.label }}
+            {{ form.category(class="form-control") }}
+        </div>
+
+        <!-- Document Upload Field -->
+        <div class="mb-3">
+            <label for="file" class="form-label">Upload File</label>
+            <input type="file" name="file" id="file" class="form-control" required>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="btn btn-custom">Upload Document</button>
+    </form>
+{% endblock %}

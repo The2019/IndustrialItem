@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Item{% endblock %}
+
+{% block content %}
+    <h1 class="mb-4">Edit Item</h1>
+    <form method="POST">
+        {{ form.hidden_tag() }}
+        <div class="mb-3">{{ form.name.label }} {{ form.name(class="form-control") }}</div>
+        <div class="mb-3">{{ form.quantity.label }} {{ form.quantity(class="form-control") }}</div>
+        <div class="mb-3">{{ form.category.label }} {{ form.category(class="form-control") }}</div>
+        <div class="mb-3">{{ form.location.label }} {{ form.location(class="form-control") }}</div>
+        <div class="mb-3">{{ form.tags.label }} {{ form.tags(class="form-control") }}</div>
+        <div class="mb-3">{{ form.material.label }} {{ form.material(class="form-control") }}</div>
+        <div class="mb-3">{{ form.color.label }} {{ form.color(class="form-control") }}</div>
+
+        <button type="submit" class="btn btn-custom">Save</button>
+    </form>
+{% endblock %}

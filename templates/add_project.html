@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Project{% endblock %}
+
+{% block content %}
+    <h1>Create New Project</h1>
+    <form method="POST">
+        {{ form.hidden_tag() }}
+        <div class="mb-3">{{ form.name.label }} {{ form.name(class="form-control") }}</div>
+        <div class="mb-3">{{ form.description.label }} {{ form.description(class="form-control") }}</div>
+        <div class="mb-3">{{ form.materials_needed.label }} {{ form.materials_needed(class="form-control") }}</div>
+        <button type="submit" class="btn btn-custom">Add Project</button>
+    </form>
+{% endblock %}
