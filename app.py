@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import FlaskForm
 from wtforms import StringField, IntegerField, SelectField, SubmitField
@@ -43,14 +43,14 @@ class ItemForm(FlaskForm):
     category = SelectField('Category', choices=[('screw', 'Screw'), ('resistor', 'Resistor'), ('filament', 'Filament'), ('other', 'Other')])
     location = StringField('Location')
     tags = StringField('Tags (comma-separated)')
-    material = SelectField('Material', choices=[('stainless_304', 'Stainless 304'), ('pla', 'PLA')])
-    color = SelectField('Color', choices=[('black', 'Black'), ('orange', 'Orange'), ('grey', 'Grey'), ('white', 'White'), ('red', 'Red'), ('green', 'Green')])
+    material = SelectField('Material', choices=[(None, 'None'), ('stainless_304', 'Stainless 304'), ('pla', 'PLA'), ('petg', 'PETG'), ('petgcf', 'PETG-CF')])
+    color = SelectField('Color', choices=[(None, 'None'), ('black', 'Black'), ('orange', 'Orange'), ('grey', 'Grey'), ('white', 'White'), ('red', 'Red'), ('green', 'Green'), ('purple', 'Purple')])
     submit = SubmitField('Save')
 
 class DocumentForm(FlaskForm):
     name = StringField('Name', validators=[DataRequired()])
     category = SelectField('Category', choices=[('technical_drawing', 'Technical Drawing'), ('datasheet', 'Datasheet')])
-    file = StringField('File', validators=[DataRequired()])
+    file = StringField('File')
     submit = SubmitField('Upload')
 
 class ProjectForm(FlaskForm):
@@ -67,7 +67,8 @@ def dashboard():
 def inventory():
     query = request.args.get('search', '')
     items = Item.query.filter(Item.name.contains(query) | Item.tags.contains(query)).all()
-    return render_template('inventory.html', items=items, query=query)
+    form = ItemForm()  # Create an instance of the form
+    return render_template('inventory.html', items=items, query=query, form=form)
 
 @app.route('/add_item', methods=['GET', 'POST'])
 def add_item():
@@ -79,8 +80,8 @@ def add_item():
             category=form.category.data,
             location=form.location.data,
             tags=form.tags.data,
-            material=form.material.data,
-            color=form.color.data
+            material=form.material.data if form.material.data != 'None' else None,  # Handle 'None' as no material
+            color=form.color.data if form.color.data != 'None' else None  # Handle 'None' as no color
         )
         db.session.add(new_item)
         db.session.commit()
@@ -98,12 +99,34 @@ def edit_item(item_id):
         item.category = form.category.data
         item.location = form.location.data
         item.tags = form.tags.data
-        item.material = form.material.data
-        item.color = form.color.data
+        item.material = form.material.data if form.material.data != 'None' else None  # Handle 'None' as no material
+        item.color = form.color.data if form.color.data != 'None' else None  # Handle 'None' as no color
         db.session.commit()
         flash('Item updated successfully!', 'success')
         return redirect(url_for('inventory'))
     return render_template('edit_item.html', form=form, item=item)
+
+
+@app.route('/use/<int:item_id>', methods=['GET', 'POST'])
+def use_item(item_id):
+    item = Item.query.get_or_404(item_id)
+
+    if request.method == 'POST':
+        quantity = int(request.form['quantity'])
+        action = request.form['action']
+
+        if action == "take":
+            if item.quantity >= quantity:
+                item.quantity -= quantity
+            else:
+                flash("Not enough stock available!", "danger")
+        elif action == "add":
+            item.quantity += quantity
+
+        db.session.commit()
+        return redirect(url_for('inventory'))
+
+    return render_template('use_item.html', item=item)
 
 @app.route('/delete_item/<int:item_id>', methods=['GET', 'POST'])
 def delete_item(item_id):
@@ -115,8 +138,11 @@ def delete_item(item_id):
 
 @app.route('/documents', methods=['GET'])
 def documents():
-    documents = Document.query.all()
-    return render_template('documents.html', documents=documents)
+    query = request.args.get('search', '')  # Get the search query from the URL
+    documents = Document.query.filter(Document.name.contains(query) | Document.category.contains(query)).all()
+    form = DocumentForm()
+    return render_template('documents.html', documents=documents, query=query, form=form)
+
 
 @app.route('/upload_document', methods=['GET', 'POST'])
 def upload_document():
@@ -125,13 +151,14 @@ def upload_document():
         file = request.files['file']
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)  # Full path for saving
+
             file.save(file_path)
 
             document = Document(
                 name=form.name.data,
                 category=form.category.data,
-                file_path=file_path
+                file_path=filename  # Store only the filename, not the full path
             )
             db.session.add(document)
             db.session.commit()
@@ -143,6 +170,29 @@ def upload_document():
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
+
+@app.route('/uploads/<path:filename>')
+def download_document(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename, as_attachment=True)
+
+
+@app.route('/edit_document/<int:document_id>', methods=['GET', 'POST'])
+def edit_document(document_id):
+    document = Document.query.get_or_404(document_id)  # Get the document by ID
+    form = DocumentForm(obj=document)  # Initialize form with the document data
+
+    if form.validate_on_submit():  # If the form is submitted and valid
+        document.name = form.name.data  # Update document's name
+        document.category = form.category.data  # Update document's category
+        db.session.commit()  # Commit changes to the database
+        flash('Document updated successfully!', 'success')  # Show success message
+
+        return redirect(url_for('documents'))  # Redirect to documents list
+    else:
+        # Debugging: print the form errors to understand what's wrong
+        print(form.errors)
+
+    return render_template('edit_document.html', form=form, document=document)  # Render the template with form
 
 @app.route('/projects', methods=['GET'])
 def projects():
@@ -182,13 +232,15 @@ def use_item_in_project(project_id):
 def delete_document(document_id):
     document = Document.query.get_or_404(document_id)
 
-    os.remove(os.path.join( document.file_path))
+    file_path = os.path.join(app.config['UPLOAD_FOLDER'], document.file_path)
+
+    if os.path.exists(file_path):
+        os.remove(file_path)
 
     db.session.delete(document)
     db.session.commit()
     flash('Document deleted!', 'danger')
     return redirect(url_for('documents'))
-
 
 @app.route('/delete_project/<int:project_id>', methods=['GET', 'POST'])
 def delete_project(project_id):
