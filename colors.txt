@@ -1,0 +1,5 @@
+Light Blue: #C4DFE6
+Seafoam Blue: #66A5AD
+
+flask db migrate -m "Create project_material table"
+flask db upgrade

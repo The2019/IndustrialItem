@@ -1,0 +1,238 @@
+{% extends "base.html" %}
+
+{% block title %}{{ t('add_project') }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header" style="background-color: #C4DFE6;">
+                    <h4 class="mb-0">{{ t('add_project') }}</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" id="projectForm" class="needs-validation" novalidate>
+                        {{ form.csrf_token }}
+                        
+                        <!-- Basic Information -->
+                        <div class="mb-4">
+                            <h5>{{ t('basic_information') }}</h5>
+                            <div class="mb-3">
+                                {{ form.name.label(class="form-label") }}
+                                {{ form.name(class="form-control", placeholder=t('enter_project_name')) }}
+                                {% if form.name.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.name.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="mb-3">
+                                {{ form.description.label(class="form-label") }}
+                                {{ form.description(class="form-control", rows="3", placeholder=t('enter_description')) }}
+                                {% if form.description.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.description.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Items Selection -->
+                        <div class="mb-4">
+                            <h5>{{ t('required_items') }}</h5>
+                            <div class="mb-3">
+                                <div class="input-group mb-3">
+                                    <input type="text" id="itemSearch" class="form-control" placeholder="{{ t('search_items') }}...">
+                                    <button type="button" class="btn btn-custom" id="itemSearchBtn">{{ t('search') }}</button>
+                                </div>
+                                <div id="itemsContainer">
+                                    <!-- Items will be added here dynamically -->
+                                </div>
+                                <button type="button" class="btn btn-custom mt-2" id="addItemBtn">
+                                    {{ t('add_item') }}
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Documents Selection -->
+                        <div class="mb-4">
+                            <h5>{{ t('related_documents') }}</h5>
+                            <div class="mb-3">
+                                <div class="input-group mb-3">
+                                    <input type="text" id="documentSearch" class="form-control" placeholder="{{ t('search_documents') }}...">
+                                    <button type="button" class="btn btn-custom" id="documentSearchBtn">{{ t('search') }}</button>
+                                </div>
+                                <div id="documentsContainer">
+                                    <!-- Documents will be added here dynamically -->
+                                </div>
+                                <button type="button" class="btn btn-custom mt-2" id="addDocumentBtn">
+                                    {{ t('add_document') }}
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="text-end">
+                            <a href="{{ url_for('projects') }}" class="btn btn-secondary">{{ t('cancel') }}</a>
+                            {{ form.submit(class="btn btn-custom", value=t('save')) }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const itemsContainer = document.getElementById('itemsContainer');
+    const documentsContainer = document.getElementById('documentsContainer');
+    const addItemBtn = document.getElementById('addItemBtn');
+    const addDocumentBtn = document.getElementById('addDocumentBtn');
+    const itemSearch = document.getElementById('itemSearch');
+    const documentSearch = document.getElementById('documentSearch');
+    const itemSearchBtn = document.getElementById('itemSearchBtn');
+    const documentSearchBtn = document.getElementById('documentSearchBtn');
+    
+    const items = {{ form.items.choices|tojson }};
+    const documents = {{ form.documents.choices|tojson }};
+    
+    // Filter items based on search
+    function filterItems(searchText) {
+        return items.filter(([id, name]) => 
+            name.toLowerCase().includes(searchText.toLowerCase())
+        );
+    }
+
+    // Filter documents based on search
+    function filterDocuments(searchText) {
+        return documents.filter(([id, name]) => 
+            name.toLowerCase().includes(searchText.toLowerCase())
+        );
+    }
+    
+    function createItemRow() {
+        const row = document.createElement('div');
+        row.className = 'row mb-2 align-items-end';
+        
+        const filteredItems = filterItems(itemSearch.value);
+        
+        row.innerHTML = `
+            <div class="col-6">
+                <label class="form-label">{{ t('item') }}</label>
+                <select name="items" class="form-select" required>
+                    <option value="">{{ t('select_item') }}</option>
+                    ${filteredItems.map(([id, name]) => `<option value="${id}">${name}</option>`).join('')}
+                </select>
+            </div>
+            <div class="col-4">
+                <label class="form-label">{{ t('quantity') }}</label>
+                <input type="number" name="quantities[]" class="form-control" min="1" value="1" required>
+            </div>
+            <div class="col-2">
+                <button type="button" class="btn btn-danger remove-item">{{ t('remove') }}</button>
+            </div>
+        `;
+        
+        row.querySelector('.remove-item').addEventListener('click', function() {
+            row.remove();
+        });
+        
+        return row;
+    }
+
+    function createDocumentRow() {
+        const row = document.createElement('div');
+        row.className = 'row mb-2 align-items-end';
+        
+        const filteredDocuments = filterDocuments(documentSearch.value);
+        
+        row.innerHTML = `
+            <div class="col-10">
+                <label class="form-label">{{ t('document') }}</label>
+                <select name="documents" class="form-select" required>
+                    <option value="">{{ t('select_document') }}</option>
+                    ${filteredDocuments.map(([id, name]) => `<option value="${id}">${name}</option>`).join('')}
+                </select>
+            </div>
+            <div class="col-2">
+                <button type="button" class="btn btn-danger remove-document">{{ t('remove') }}</button>
+            </div>
+        `;
+        
+        row.querySelector('.remove-document').addEventListener('click', function() {
+            row.remove();
+        });
+        
+        return row;
+    }
+    
+    // Function to update item dropdowns
+    function updateItemDropdowns() {
+        const selects = itemsContainer.querySelectorAll('select');
+        const filteredItems = filterItems(itemSearch.value);
+        selects.forEach(select => {
+            const currentValue = select.value;
+            select.innerHTML = `
+                <option value="">{{ t('select_item') }}</option>
+                ${filteredItems.map(([id, name]) => `<option value="${id}">${name}</option>`).join('')}
+            `;
+            select.value = currentValue;
+        });
+    }
+
+    // Function to update document dropdowns
+    function updateDocumentDropdowns() {
+        const selects = documentsContainer.querySelectorAll('select');
+        const filteredDocuments = filterDocuments(documentSearch.value);
+        selects.forEach(select => {
+            const currentValue = select.value;
+            select.innerHTML = `
+                <option value="">{{ t('select_document') }}</option>
+                ${filteredDocuments.map(([id, name]) => `<option value="${id}">${name}</option>`).join('')}
+            `;
+            select.value = currentValue;
+        });
+    }
+    
+    addItemBtn.addEventListener('click', function() {
+        itemsContainer.appendChild(createItemRow());
+    });
+
+    addDocumentBtn.addEventListener('click', function() {
+        documentsContainer.appendChild(createDocumentRow());
+    });
+    
+    // Add first item row by default
+    itemsContainer.appendChild(createItemRow());
+
+    // Update item dropdowns when search button is clicked
+    itemSearchBtn.addEventListener('click', updateItemDropdowns);
+
+    // Update document dropdowns when search button is clicked
+    documentSearchBtn.addEventListener('click', updateDocumentDropdowns);
+
+    // Also keep the real-time search functionality
+    itemSearch.addEventListener('input', updateItemDropdowns);
+    documentSearch.addEventListener('input', updateDocumentDropdowns);
+
+    // Add enter key support for search
+    itemSearch.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            updateItemDropdowns();
+        }
+    });
+
+    documentSearch.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            updateDocumentDropdowns();
+        }
+    });
+});
+</script>
+{% endblock %}
