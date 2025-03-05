@@ -19,7 +19,7 @@ A web-based inventory management system for tracking industrial items, their loc
 
 1. Clone the repository:
 ```bash
-git clone <your-repository-url>
+git clone https://github.com/The2019/IndustrialItem
 cd IndustrialItem
 ```
 
@@ -39,7 +39,7 @@ docker-compose up -d
 
 1. Clone the repository:
 ```bash
-git clone <your-repository-url>
+git clone https://github.com/The2019/IndustrialItem
 cd IndustrialItem
 ```
 
