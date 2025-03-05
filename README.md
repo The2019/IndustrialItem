@@ -24,9 +24,25 @@ cd IndustrialItem
 ```
 
 2. Create a `.env` file with your secret key:
+
+**On Linux/Mac:**
 ```bash
 echo "SECRET_KEY=your-secret-key-here" > .env
 ```
+
+**On Windows (PowerShell):**
+```powershell
+"SECRET_KEY=your-secret-key-here" | Out-File -FilePath .env -Encoding UTF8
+```
+
+**On Windows (Alternative Method):**
+1. Open Notepad
+2. Type: `SECRET_KEY=your-secret-key-here`
+3. Click "Save As"
+4. Set "Save as type" to "All Files (*.*)"
+5. Name it `.env`
+6. Set "Encoding" to "UTF-8"
+7. Save it in your project directory
 
 3. Build and start the application:
 ```bash
@@ -88,6 +104,14 @@ gunicorn --bind 0.0.0.0:5000 app:app
 - Database: Stored in `instance/inventory.db`
 - Uploads: Stored in `uploads/` directory
 - Both are persisted using Docker volumes when using Docker deployment
+
+## Static Files
+The application includes static files (icons and images) that are required for the interface:
+- Icons: Located in `static/icons/`
+- Images: Located in `static/images/`
+- Logo: Located in `static/IndustrialItem.png`
+
+These files are essential for the application's interface and should be included when cloning the repository.
 
 ## Security Notes
 1. Always change the default secret key in production

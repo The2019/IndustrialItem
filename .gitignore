@@ -39,4 +39,8 @@ Thumbs.db
 
 # Logs
 *.log
-logs/ 
+logs/
+
+# Keep static files
+!static/icons/*.png
+!static/images/*.png 
