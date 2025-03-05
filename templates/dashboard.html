@@ -1,0 +1,252 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ t('dashboard') }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-tachometer-alt"></i> {{ t('dashboard') }}</h2>
+        <div class="btn-group">
+            <a href="{{ url_for('inventory') }}" class="btn btn-custom">
+                <i class="fas fa-boxes"></i> {{ t('inventory') }}
+            </a>
+            <a href="{{ url_for('documents') }}" class="btn btn-custom">
+                <i class="fas fa-file-alt"></i> {{ t('documents') }}
+            </a>
+            <a href="{{ url_for('projects') }}" class="btn btn-custom">
+                <i class="fas fa-project-diagram"></i> {{ t('projects') }}
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Stats Row -->
+    <div class="row mb-4">
+        <!-- Total Items Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header" style="background-color: #C4DFE6;">
+                    <div class="text-xs font-weight-bold text-dark text-uppercase mb-1">
+                        {{ t('total_items') }}
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="h5 mb-0 font-weight-bold">{{ total_quantity }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-boxes fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Documents Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header" style="background-color: #C4DFE6;">
+                    <div class="text-xs font-weight-bold text-dark text-uppercase mb-1">
+                        {{ t('total_documents') }}
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="h5 mb-0 font-weight-bold">{{ total_documents }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-file-alt fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Projects Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header" style="background-color: #C4DFE6;">
+                    <div class="text-xs font-weight-bold text-dark text-uppercase mb-1">
+                        {{ t('active_projects') }}
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="h5 mb-0 font-weight-bold">{{ total_projects }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-project-diagram fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Low Stock Items Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header" style="background-color: #C4DFE6;">
+                    <div class="text-xs font-weight-bold text-dark text-uppercase mb-1">
+                        {{ t('low_stock_items') }}
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="h5 mb-0 font-weight-bold">{{ low_stock_count }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Information Row -->
+    <div class="row">
+        <!-- Latest Items Table -->
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header" style="background-color: #C4DFE6;">
+                    <h6 class="m-0 font-weight-bold">
+                        <i class="fas fa-history"></i> {{ t('recent_activity') }}
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>{{ t('item') }}</th>
+                                    <th>{{ t('action') }}</th>
+                                    <th>{{ t('quantity') }}</th>
+                                    <th>{{ t('date') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for activity in recent_activities %}
+                                <tr class="clickable-row" onclick="window.location='{{ url_for('use_item', item_id=activity.item_id) }}'">
+                                    <td>
+                                        <a href="{{ url_for('use_item', item_id=activity.item_id) }}" class="item-link">
+                                            {{ activity.item_name }}
+                                        </a>
+                                    </td>
+                                    <td>{{ t(activity.action) }}</td>
+                                    <td>{{ activity.quantity }}</td>
+                                    <td>{{ activity.date }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Low Stock Items -->
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header" style="background-color: #C4DFE6;">
+                    <h6 class="m-0 font-weight-bold">
+                        <i class="fas fa-exclamation-circle"></i> {{ t('low_stock_alert') }}
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>{{ t('item') }}</th>
+                                    <th>{{ t('current') }}</th>
+                                    <th>{{ t('minimum') }}</th>
+                                    <th>{{ t('status') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in low_stock_items %}
+                                <tr class="clickable-row {% if item.quantity < item.min_stock_level %}critical-stock{% elif item.quantity <= item.min_stock_level * 1.25 %}warning-stock{% endif %}" 
+                                    onclick="window.location='{{ url_for('use_item', item_id=item.id) }}'">
+                                    <td>
+                                        <a href="{{ url_for('use_item', item_id=item.id) }}" class="item-link">
+                                            {{ item.name }}
+                                        </a>
+                                    </td>
+                                    <td>{{ item.quantity }}</td>
+                                    <td>{{ item.min_stock_level }}</td>
+                                    <td>
+                                        {% if item.quantity < item.min_stock_level %}
+                                            <span class="badge bg-danger">{{ t('critical') }}</span>
+                                        {% elif item.quantity <= item.min_stock_level * 1.25 %}
+                                            <span class="badge bg-warning text-dark">{{ t('warning') }}</span>
+                                        {% else %}
+                                            <span class="badge bg-success">{{ t('normal') }}</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    border: none;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+}
+.card-header {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+.text-gray-300 {
+    color: #dddfeb!important;
+}
+.btn-custom {
+    background-color: #C4DFE6;
+    color: #000;
+    border: none;
+}
+.btn-custom:hover {
+    background-color: #a3ccd5;
+    color: #000;
+}
+.item-link {
+    color: #000;
+    text-decoration: none;
+    display: block;
+    width: 100%;
+}
+.item-link:hover {
+    color: #000;
+    text-decoration: none;
+}
+.clickable-row {
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+.clickable-row:hover {
+    background-color: rgba(196, 223, 230, 0.3);
+}
+.table-hover tbody tr:hover {
+    background-color: transparent;
+}
+.critical-stock {
+    background-color: rgba(255, 0, 0, 0.1);
+}
+.warning-stock {
+    background-color: rgba(255, 255, 0, 0.1);
+}
+.badge {
+    font-size: 0.8em;
+    padding: 0.5em 0.8em;
+}
+</style>
+{% endblock %}

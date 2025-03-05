@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ t('edit_document') }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header" style="background-color: #C4DFE6;">
+                    <h4 class="mb-0">{{ t('edit_document') }}</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" class="needs-validation" novalidate>
+                        {{ form.csrf_token }}
+                        
+                        <!-- Document Information -->
+                        <div class="mb-4">
+                            <h5>{{ t('document_information') }}</h5>
+                            <div class="mb-3">
+                                <label class="form-label">{{ t('document_name') }}</label>
+                                {{ form.name(class="form-control", placeholder=t('enter_document_name')) }}
+                                {% if form.name.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.name.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">{{ t('document_category') }}</label>
+                                {{ form.category(class="form-select", placeholder=t('select_document_category')) }}
+                                {% if form.category.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.category.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="text-end">
+                            <a href="{{ url_for('documents') }}" class="btn btn-secondary">{{ t('cancel') }}</a>
+                            <button type="submit" class="btn btn-custom">{{ t('save') }}</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

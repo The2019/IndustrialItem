@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}{{ t('edit_item') }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header" style="background-color: #C4DFE6;">
+                    <h4 class="mb-0">{{ t('edit_item') }}</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" class="needs-validation" novalidate>
+                        {{ form.csrf_token }}
+                        
+                        <!-- Basic Information -->
+                        <div class="mb-4">
+                            <h5>{{ t('basic_information') }}</h5>
+                            <div class="mb-3">
+                                {{ form.name.label(class="form-label") }}
+                                {{ form.name(class="form-control", placeholder=t('enter_item_name')) }}
+                                {% if form.name.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.name.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="mb-3">
+                                {{ form.quantity.label(class="form-label") }}
+                                {{ form.quantity(class="form-control", placeholder=t('enter_quantity')) }}
+                                {% if form.quantity.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.quantity.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="mb-3">
+                                {{ form.min_stock_level.label(class="form-label") }}
+                                {{ form.min_stock_level(class="form-control", placeholder=t('enter_min_stock')) }}
+                                {% if form.min_stock_level.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.min_stock_level.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                                <div class="form-text">{{ t('min_stock_help') }}</div>
+                            </div>
+                        </div>
+
+                        <!-- Categories and Properties -->
+                        <div class="mb-4">
+                            <h5>{{ t('categories_and_properties') }}</h5>
+                            <div class="mb-3">
+                                {{ form.category.label(class="form-label") }}
+                                {{ form.category(class="form-select", placeholder=t('select_category')) }}
+                                {% if form.category.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.category.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="mb-3">
+                                {{ form.material.label(class="form-label") }}
+                                {{ form.material(class="form-select", placeholder=t('select_material')) }}
+                                {% if form.material.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.material.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="mb-3">
+                                {{ form.color.label(class="form-label") }}
+                                {{ form.color(class="form-select", placeholder=t('select_color')) }}
+                                {% if form.color.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.color.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Additional Information -->
+                        <div class="mb-4">
+                            <h5>{{ t('additional_information') }}</h5>
+                            <div class="mb-3">
+                                {{ form.location.label(class="form-label") }}
+                                {{ form.location(class="form-select", placeholder=t('select_location')) }}
+                                {% if form.location.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.location.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="text-end">
+                            <a href="{{ url_for('inventory') }}" class="btn btn-secondary">{{ t('cancel') }}</a>
+                            {{ form.submit(class="btn btn-custom") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

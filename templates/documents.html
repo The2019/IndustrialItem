@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ t('documents') }}{% endblock %}
+
+{% block content %}
+    <h1 class="mb-4">{{ t('documents') }}</h1>
+
+    <form class="mb-4">
+        <div class="input-group">
+            <input type="text" name="search" value="{{ query }}" class="form-control" placeholder="{{ t('search') }}">
+            <button type="submit" class="btn btn-custom">{{ t('search') }}</button>
+        </div>
+    </form>
+
+    <a href="{{ url_for('upload_document') }}" class="btn btn-custom mb-3">{{ t('upload_document') }}</a>
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover">
+            <tr>
+                <th>{{ t('document_name') }}</th>
+                <th>{{ t('document_category') }}</th>
+                <th>{{ t('actions') }}</th>
+            </tr>
+            <tbody>
+                {% for document in documents %}
+                <tr>
+                    <td>{{ document.name }}</td>
+                    <td>{{ document.category.name if document.category else 'None' }}</td>
+                    <td class="text-nowrap">
+                        <a href="{{ url_for('download_document', filename=document.file_path) }}" class="btn btn-custom btn-sm me-2">{{ t('download') }}</a>
+                        <a href="{{ url_for('edit_document', document_id=document.id) }}" class="btn btn-warning btn-sm me-2">{{ t('edit') }}</a>
+                        <form action="{{ url_for('delete_document', document_id=document.id) }}" method="post" style="display: inline;" onsubmit="confirmDelete(event)">
+                            <button type="submit" class="btn btn-danger btn-sm">
+                                <i class="fas fa-trash"></i> {{ t('delete') }}
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="3" class="text-center">{{ t('no_documents_found') }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ t('use_item') }}{% endblock %}
+
+{% block content %}
+    <h1 class="mb-4">{{ t('use_item') }}</h1>
+
+    <div class="card mb-4">
+        <div class="card-header" style="background-color: #C4DFE6;">
+            <h5 class="mb-0">{{ item.name }}</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>{{ t('quantity') }}:</strong> {{ item.quantity }}</p>
+                    <p><strong>{{ t('min_stock_level') }}:</strong> {{ item.min_stock_level }}</p>
+                    <p><strong>{{ t('category') }}:</strong> {{ item.category.name if item.category else 'None' }}</p>
+                    <p><strong>{{ t('location') }}:</strong> {{ item.location.name if item.location else 'None' }}</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>{{ t('material') }}:</strong> {{ item.material.name if item.material else 'None' }}</p>
+                    <p><strong>{{ t('color') }}:</strong> {{ item.color.name if item.color else 'None' }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <form method="POST" class="needs-validation" novalidate>
+        {{ form.csrf_token }}
+        
+        <div class="mb-3">
+            <label class="form-label">{{ t('quantity') }}</label>
+            <div class="input-group">
+                <input type="number" id="quantity" name="quantity" class="form-control" placeholder="{{ t('enter_quantity') }}" required min="1">
+                <div class="input-group-append">
+                    <button type="button" class="btn btn-outline-success" onclick="updateQuantity(1)">+1</button>
+                    <button type="button" class="btn btn-outline-success" onclick="updateQuantity(5)">+5</button>
+                    <button type="button" class="btn btn-outline-success" onclick="updateQuantity(10)">+10</button>
+                </div>
+            </div>
+            {% if form.quantity.errors %}
+            <div class="invalid-feedback d-block">
+                {% for error in form.quantity.errors %}
+                {{ error }}
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="mb-3">
+            <button type="submit" name="action" value="add" class="btn btn-success me-2">{{ t('add_stock') }}</button>
+            <button type="submit" name="action" value="subtract" class="btn btn-danger me-2">{{ t('use_item') }}</button>
+            <a href="{{ url_for('inventory') }}" class="btn btn-secondary">{{ t('cancel') }}</a>
+        </div>
+    </form>
+
+    <script>
+        function updateQuantity(change) {
+            const quantityInput = document.getElementById('quantity');
+            const currentValue = parseInt(quantityInput.value) || 0;
+            const newValue = Math.max(0, currentValue + change);
+            quantityInput.value = newValue;
+        }
+    </script>
+{% endblock %}
