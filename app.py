@@ -1,7 +1,7 @@
 import os
 from flask import Flask, render_template, request, redirect, url_for, flash, send_from_directory, session
 from flask_sqlalchemy import SQLAlchemy
-from flask_wtf import FlaskForm
+from flask_wtf import FlaskForm, CSRFProtect
 from wtforms import StringField, IntegerField, SelectField, SubmitField, SelectMultipleField, StringField, TextAreaField
 from wtforms.validators import DataRequired, NumberRange
 from flask_migrate import Migrate
@@ -16,12 +16,22 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'uploads/'  # Folder for storing files
 app.config['ALLOWED_EXTENSIONS'] = {'pdf', 'doc', 'docx', 'txt', 'xlsx'}
 
+# Initialize CSRF protection
+csrf = CSRFProtect(app)
+
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
 def init_db():
     with app.app_context():
+        # Ensure instance directory exists
+        if not os.path.exists('instance'):
+            os.makedirs('instance')
+        # Create database if it doesn't exist
         db.create_all()
+        
+        # Return True if database exists after initialization
+        return os.path.exists('instance/inventory.db')
 
 # Language handling
 def get_language():
@@ -630,5 +640,6 @@ def edit_project(project_id):
                          documents_data=documents_data)
 
 if __name__ == '__main__':
-    init_db()
+    # Initialize database and ensure it exists
+    db_initialized = init_db()
     app.run(host='0.0.0.0', port=5001, debug=True)

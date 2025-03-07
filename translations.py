@@ -121,7 +121,12 @@ translations = {
         'save': 'Save',
         'select_item': 'Select an item',
         'document': 'Document',
-        'select_document': 'Select a document'
+        'select_document': 'Select a document',
+        'backup_settings': 'Backup Settings',
+        'create_backup': 'Create Backup',
+        'available_backups': 'Available Backups',
+        'size': 'Size',
+        'backup_note': 'The system keeps the 15 most recent backups. Older backups are automatically deleted.'
     },
     'de': {
         # General
@@ -245,6 +250,11 @@ translations = {
         'save': 'Speichern',
         'select_item': 'Artikel auswählen',
         'document': 'Dokument',
-        'select_document': 'Dokument auswählen'
+        'select_document': 'Dokument auswählen',
+        'backup_settings': 'Backup-Einstellungen',
+        'create_backup': 'Backup erstellen',
+        'available_backups': 'Verfügbare Backups',
+        'size': 'Größe',
+        'backup_note': 'Das System behält die 15 neuesten Backups. Ältere Backups werden automatisch gelöscht.'
     }
 } 
