@@ -44,3 +44,4 @@ logs/
 # Keep static files
 !static/icons/*.png
 !static/images/*.png 
+!static/*.png
