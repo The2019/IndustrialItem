@@ -34,4 +34,4 @@ flask db upgrade\n\
 gunicorn --bind 0.0.0.0:5000 app:app' > /app/start.sh
 RUN chmod +x /app/start.sh
 
-CMD ["/app/start.sh"] 
+CMD ["/app/start.sh"]

@@ -10,4 +10,4 @@ services:
       - FLASK_APP=app.py
       - FLASK_ENV=production
       - SECRET_KEY=${SECRET_KEY:-your-secret-key-here}
-    restart: unless-stopped 
+    restart: unless-stopped

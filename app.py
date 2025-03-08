@@ -638,8 +638,3 @@ def edit_project(project_id):
                          project=project,
                          items_data=items_data,
                          documents_data=documents_data)
-
-if __name__ == '__main__':
-    # Initialize database and ensure it exists
-    db_initialized = init_db()
-    app.run(host='0.0.0.0', port=5001, debug=True)

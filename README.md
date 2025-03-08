@@ -3,12 +3,11 @@
 A web-based inventory management system for tracking industrial items, their locations, and associated documents.
 
 ## Features
-- Multi-language support (English, German, French)
-- Dark/Light theme
+- Multi-language support (English, German)
+- Diffrent Colorthemes
 - Item management with categories, materials, and colors
 - Location tracking
 - Document management
-- User authentication
 - Responsive design
 
 ## Prerequisites
