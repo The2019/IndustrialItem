@@ -1,37 +1,47 @@
-# Use Python 3.9 slim image as base
+# Use Python 3.9 slim image
 FROM python:3.9-slim
 
 # Set working directory
 WORKDIR /app
 
-# Copy requirements first to leverage Docker cache
+# Copy dependencies first (better caching)
 COPY requirements.txt .
 
-# Install Python dependencies
+# Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the rest of the application
 COPY . .
 
-# Create uploads directory
-RUN mkdir -p uploads
+# Create uploads directory (persistent)
+RUN mkdir -p /app/uploads
+
+# Define volumes
+VOLUME /app/uploads
 
 # Set environment variables
 ENV FLASK_APP=app.py
 ENV FLASK_ENV=production
+ENV HOST=0.0.0.0
+ENV PORT=5000
 
-# Expose port 5000
+# Expose port
 EXPOSE 5000
 
-# Create a startup script that handles both fresh and existing deployments
+# Startup script
 RUN echo '#!/bin/bash\n\
 if [ ! -d "migrations" ]; then\n\
-    echo "Migrations directory not found. Initializing..."\n\
+    echo "Initializing database migrations..."\n\
     flask db init\n\
     flask db migrate -m "Initial migration"\n\
+    flask db upgrade\n\
+else\n\
+    echo "Applying database migrations..."\n\
+    flask db upgrade\n\
 fi\n\
-flask db upgrade\n\
-gunicorn --bind 0.0.0.0:5000 app:app' > /app/start.sh
+echo "Starting Gunicorn..."\n\
+exec gunicorn --bind $HOST:$PORT app:app' > /app/start.sh
+
 RUN chmod +x /app/start.sh
 
-CMD ["/app/start.sh"]
+CMD ["sh", "/app/start.sh"]
