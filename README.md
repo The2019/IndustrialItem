@@ -133,13 +133,6 @@ These files are essential for the application's interface and should be included
 3. Access the application via local network address
 4. No HTTPS needed as VPN provides encryption
 
-### Direct Internet Access (Not Recommended)
-If you must make the application directly accessible from the internet:
-1. Set up HTTPS using a reverse proxy (e.g., Nginx)
-2. Configure proper firewall rules
-3. Use strong authentication
-4. Keep the application updated
-
 ## Troubleshooting
 1. If the application doesn't start, check the logs:
 ```bash
@@ -157,13 +150,3 @@ docker-compose up -d
 ```bash
 chmod -R 755 uploads/
 ```
-
-## Contributing
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
-
-## License
-[Your chosen license] 
