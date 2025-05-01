@@ -1,6 +1,62 @@
-# Industrial Item Management System
+# Industrial Item Inventory Management
 
-A web-based inventory management system for tracking industrial items, their locations, and associated documents.
+A Flask-based inventory management system for industrial items.
+
+## Running with Docker
+
+### Prerequisites
+- Docker and Docker Compose installed on your system
+
+### Steps to Run
+
+1. Clone the repository:
+```bash
+git clone https://github.com/The2019/IndustrialItem
+cd IndustrialItem
+```
+
+2. Build and start the Docker containers:
+```bash
+docker-compose up -d
+```
+
+3. Access the application:
+Open your browser and navigate to http://localhost:5000
+
+### Import/Export Data
+
+- To export data: Go to Settings > Export Data
+- To import data: Go to Settings > Import Data (upload a ZIP file containing CSV files)
+
+### Stopping the Application
+
+```bash
+docker-compose down
+```
+
+## Development
+
+For development, you can use volume mounts to see changes in real-time:
+
+```bash
+docker-compose up
+```
+
+This will mount your local directory to the container, allowing you to make changes to the code and see them reflected immediately.
+
+## Troubleshooting
+
+- If you encounter database issues, you can reset it by removing the instance folder:
+```bash
+docker-compose down
+rm -rf instance
+docker-compose up -d
+```
+
+- Check logs with:
+```bash
+docker-compose logs -f
+```
 
 ## Features
 - Multi-language support (English, German)
@@ -13,42 +69,6 @@ A web-based inventory management system for tracking industrial items, their loc
 ## Prerequisites
 - Docker and Docker Compose (for Docker deployment)
 - OR Python 3.9+ and pip (for manual deployment)
-
-## Quick Start with Docker
-
-1. Clone the repository:
-```bash
-git clone https://github.com/The2019/IndustrialItem
-cd IndustrialItem
-```
-
-2. Create a `.env` file with your secret key:
-
-**On Linux/Mac:**
-```bash
-echo "SECRET_KEY=your-secret-key-here" > .env
-```
-
-**On Windows (PowerShell):**
-```powershell
-"SECRET_KEY=your-secret-key-here" | Out-File -FilePath .env -Encoding UTF8
-```
-
-**On Windows (Alternative Method):**
-1. Open Notepad
-2. Type: `SECRET_KEY=your-secret-key-here`
-3. Click "Save As"
-4. Set "Save as type" to "All Files (*.*)"
-5. Name it `.env`
-6. Set "Encoding" to "UTF-8"
-7. Save it in your project directory
-
-3. Build and start the application:
-```bash
-docker-compose up -d
-```
-
-4. Access the application at http://localhost:5001
 
 ## Manual Deployment
 
@@ -132,21 +152,3 @@ These files are essential for the application's interface and should be included
 2. Connect to your VPN from remote devices
 3. Access the application via local network address
 4. No HTTPS needed as VPN provides encryption
-
-## Troubleshooting
-1. If the application doesn't start, check the logs:
-```bash
-docker-compose logs -f
-```
-
-2. If database issues occur:
-```bash
-docker-compose down
-rm -rf instance/inventory.db
-docker-compose up -d
-```
-
-3. For permission issues:
-```bash
-chmod -R 755 uploads/
-```

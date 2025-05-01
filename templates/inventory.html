@@ -38,6 +38,7 @@
                         <a href="{{ url_for('edit_item', item_id=item.id) }}" class="btn btn-custom btn-sm">{{ t('edit') }}</a>
                         <a href="{{ url_for('use_item', item_id=item.id) }}" class="btn btn-warning btn-sm">{{ t('use_item') }}</a>
                         <form action="{{ url_for('delete_item', item_id=item.id) }}" method="post" style="display: inline;" onsubmit="confirmDelete(event)">
+                            {{ csrf_token()|safe }}
                             <button type="submit" class="btn btn-danger btn-sm">
                                 <i class="fas fa-trash"></i> {{ t('delete') }}
                             </button>

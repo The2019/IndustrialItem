@@ -4,7 +4,13 @@ FROM python:3.9-slim
 # Set working directory
 WORKDIR /app
 
-# Copy dependencies first (better caching)
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    python3-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements first to leverage Docker cache
 COPY requirements.txt .
 
 # Install dependencies
@@ -13,8 +19,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the rest of the application
 COPY . .
 
-# Create uploads directory (persistent)
-RUN mkdir -p /app/uploads
+# Create upload directory
+RUN mkdir -p uploads && chmod 777 uploads
+
+# Create instance directory for SQLite database
+RUN mkdir -p instance && chmod 777 instance
 
 # Define volumes
 VOLUME /app/uploads
@@ -24,6 +33,7 @@ ENV FLASK_APP=app.py
 ENV FLASK_ENV=production
 ENV HOST=0.0.0.0
 ENV PORT=5000
+ENV SECRET_KEY=docker-industrial-item-secret
 
 # Expose port
 EXPOSE 5000

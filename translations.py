@@ -126,7 +126,16 @@ translations = {
         'create_backup': 'Create Backup',
         'available_backups': 'Available Backups',
         'size': 'Size',
-        'backup_note': 'The system keeps the 15 most recent backups. Older backups are automatically deleted.'
+        'backup_note': 'The system keeps the 15 most recent backups. Older backups are automatically deleted.',
+
+        # Import/Export translations
+        'data_import_export': 'Data Import/Export',
+        'export_data': 'Export Data',
+        'export_description': 'Export all inventory data to a CSV file for backup or transfer.',
+        'export_to_csv': 'Export to CSV',
+        'import_data': 'Import Data',
+        'import_description': 'Import inventory data from a previously exported ZIP file.',
+        'import_from_csv': 'Import from CSV',
     },
     'de': {
         # General
@@ -255,6 +264,15 @@ translations = {
         'create_backup': 'Backup erstellen',
         'available_backups': 'Verfügbare Backups',
         'size': 'Größe',
-        'backup_note': 'Das System behält die 15 neuesten Backups. Ältere Backups werden automatisch gelöscht.'
+        'backup_note': 'Das System behält die 15 neuesten Backups. Ältere Backups werden automatisch gelöscht.',
+
+        # Import/Export translations
+        'data_import_export': 'Datenimport/-export',
+        'export_data': 'Daten exportieren',
+        'export_description': 'Exportieren Sie alle Bestandsdaten in eine CSV-Datei für Backup oder Übertragung.',
+        'export_to_csv': 'Nach CSV exportieren',
+        'import_data': 'Daten importieren',
+        'import_description': 'Importieren Sie Bestandsdaten aus einer zuvor exportierten ZIP-Datei.',
+        'import_from_csv': 'Aus CSV importieren',
     }
 } 

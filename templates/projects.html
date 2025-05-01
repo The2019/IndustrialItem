@@ -66,8 +66,9 @@
                         {% endif %}
                     </td>
                     <td class="text-nowrap">
-                        <a href="{{ url_for('edit_project', project_id=project.id) }}" class="btn btn-warning btn-sm me-2">{{ t('edit') }}</a>
+                        <a href="{{ url_for('edit_project', project_id=project.id) }}" class="btn btn-custom btn-sm">{{ t('edit') }}</a>
                         <form action="{{ url_for('delete_project', project_id=project.id) }}" method="post" style="display: inline;" onsubmit="confirmDelete(event)">
+                            {{ csrf_token()|safe }}
                             <button type="submit" class="btn btn-danger btn-sm">
                                 <i class="fas fa-trash"></i> {{ t('delete') }}
                             </button>

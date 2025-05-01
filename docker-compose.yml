@@ -1,13 +1,15 @@
+version: '3'
+
 services:
-  web:
+  webapp:
     build: .
     ports:
-      - "5001:5000"
+      - "5000:5000"
     volumes:
-      - ./uploads:/app/uploads
       - ./instance:/app/instance
+      - ./uploads:/app/uploads
     environment:
       - FLASK_APP=app.py
-      - FLASK_ENV=production
-      - SECRET_KEY=${SECRET_KEY:-your-secret-key-here}
+      - FLASK_ENV=development
+      - SECRET_KEY=docker-industrial-item-secret
     restart: unless-stopped

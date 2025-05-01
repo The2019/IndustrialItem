@@ -30,6 +30,7 @@
                         <a href="{{ url_for('download_document', filename=document.file_path) }}" class="btn btn-custom btn-sm me-2">{{ t('download') }}</a>
                         <a href="{{ url_for('edit_document', document_id=document.id) }}" class="btn btn-warning btn-sm me-2">{{ t('edit') }}</a>
                         <form action="{{ url_for('delete_document', document_id=document.id) }}" method="post" style="display: inline;" onsubmit="confirmDelete(event)">
+                            {{ csrf_token()|safe }}
                             <button type="submit" class="btn btn-danger btn-sm">
                                 <i class="fas fa-trash"></i> {{ t('delete') }}
                             </button>

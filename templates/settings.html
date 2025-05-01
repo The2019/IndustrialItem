@@ -5,6 +5,49 @@
 {% block content %}
     <h1 class="mb-4">{{ t('settings') }}</h1>
 
+    <!-- Data Import/Export Section -->
+    <div class="card mb-4">
+        <div class="card-header" style="background-color: {{ secondary_color or '#66A5AD' }}">
+            <h2 class="mb-0 text-white">{{ t('data_import_export') or 'Data Import/Export' }}</h2>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-header" style="background-color: {{ primary_color or '#C4DFE6' }}">
+                            <h5 class="card-title mb-0">{{ t('export_data') or 'Export Data' }}</h5>
+                        </div>
+                        <div class="card-body">
+                            <p>{{ t('export_description') or 'Export all inventory data to a CSV file for backup or transfer.' }}</p>
+                            <a href="{{ url_for('export_csv') }}" class="btn btn-custom">
+                                <i class="fas fa-download me-2"></i>{{ t('export_to_csv') or 'Export to CSV' }}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-header" style="background-color: {{ primary_color or '#C4DFE6' }}">
+                            <h5 class="card-title mb-0">{{ t('import_data') or 'Import Data' }}</h5>
+                        </div>
+                        <div class="card-body">
+                            <p>{{ t('import_description') or 'Import inventory data from a previously exported ZIP file.' }}</p>
+                            <form method="POST" action="{{ url_for('import_csv') }}" enctype="multipart/form-data">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <div class="mb-3">
+                                    <input type="file" class="form-control" id="import_file" name="import_file" accept=".zip">
+                                </div>
+                                <button type="submit" class="btn btn-custom">
+                                    <i class="fas fa-upload me-2"></i>{{ t('import_from_csv') or 'Import from CSV' }}
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Language Settings Section -->
     <div class="card mb-4">
         <div class="card-header" style="background-color: {{ secondary_color or '#66A5AD' }}">
@@ -12,7 +55,7 @@
         </div>
         <div class="card-body">
             <form method="POST" id="languageForm">
-                {{ form.csrf_token }}
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label for="language" class="form-label">{{ t('select_language') }}</label>
@@ -86,6 +129,7 @@
                                 <li class="list-group-item d-flex justify-content-between align-items-center">
                                     {{ category.name }}
                                     <form action="{{ url_for('delete_category', id=category.id) }}" method="post" style="display: inline;" onsubmit="confirmDelete(event)">
+                                        {{ csrf_token()|safe }}
                                         <button type="submit" class="btn btn-danger btn-sm">
                                             <i class="fas fa-trash"></i>
                                         </button>
@@ -117,6 +161,7 @@
                                 <li class="list-group-item d-flex justify-content-between align-items-center">
                                     {{ material.name }}
                                     <form action="{{ url_for('delete_material', id=material.id) }}" method="post" style="display: inline;" onsubmit="confirmDelete(event)">
+                                        {{ csrf_token()|safe }}
                                         <button type="submit" class="btn btn-danger btn-sm">
                                             <i class="fas fa-trash"></i>
                                         </button>
@@ -148,6 +193,7 @@
                                 <li class="list-group-item d-flex justify-content-between align-items-center">
                                     {{ color.name }}
                                     <form action="{{ url_for('delete_color', id=color.id) }}" method="post" style="display: inline;" onsubmit="confirmDelete(event)">
+                                        {{ csrf_token()|safe }}
                                         <button type="submit" class="btn btn-danger btn-sm">
                                             <i class="fas fa-trash"></i>
                                         </button>
@@ -179,6 +225,7 @@
                                 <li class="list-group-item d-flex justify-content-between align-items-center">
                                     {{ location.name }}
                                     <form action="{{ url_for('delete_location', id=location.id) }}" method="post" style="display: inline;" onsubmit="confirmDelete(event)">
+                                        {{ csrf_token()|safe }}
                                         <button type="submit" class="btn btn-danger btn-sm">
                                             <i class="fas fa-trash"></i>
                                         </button>
@@ -220,6 +267,7 @@
                                 <li class="list-group-item d-flex justify-content-between align-items-center">
                                     {{ category.name }}
                                     <form action="{{ url_for('delete_document_category', id=category.id) }}" method="post" style="display: inline;" onsubmit="confirmDelete(event)">
+                                        {{ csrf_token()|safe }}
                                         <button type="submit" class="btn btn-danger btn-sm">
                                             <i class="fas fa-trash"></i>
                                         </button>
