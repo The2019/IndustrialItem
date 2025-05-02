@@ -806,3 +806,13 @@ def handle_safari():
     # Handle timestamp parameter from our Safari fix
     if '_' in request.args:
         session.permanent = True
+
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(os.path.join(app.root_path, 'static', 'images', 'favicon'),
+                               'favicon.ico', mimetype='image/vnd.microsoft.icon')
+
+@app.route('/site.webmanifest')
+def manifest():
+    return send_from_directory(os.path.join(app.root_path, 'static', 'images', 'favicon'),
+                               'site.webmanifest', mimetype='application/manifest+json')
