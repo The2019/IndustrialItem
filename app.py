@@ -23,12 +23,13 @@ app.config['UPLOAD_FOLDER'] = 'uploads/'  # Folder for storing files
 app.config['ALLOWED_EXTENSIONS'] = {'pdf', 'doc', 'docx', 'txt', 'xlsx'}
 
 # Session configuration
-app.config['SESSION_COOKIE_SECURE'] = False  # Set to True if using HTTPS
+app.config['SESSION_COOKIE_SECURE'] = False
 app.config['SESSION_COOKIE_HTTPONLY'] = True
-app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # Default for most browsers
+app.config['SESSION_COOKIE_SAMESITE'] = None  # Changed to None for Safari
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=1)
-app.config['SESSION_TYPE'] = 'filesystem'  # Added explicit session type
-app.config['SESSION_FILE_DIR'] = '/tmp/flask_session'  # Path that will be accessible in Docker
+app.config['SESSION_TYPE'] = 'filesystem'
+app.config['SESSION_FILE_DIR'] = '/tmp/flask_session'
+app.config['WTF_CSRF_TIME_LIMIT'] = None  # Disable CSRF token expiration
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 
 # Initialize CSRF protection with updated settings
@@ -773,17 +774,29 @@ def get_instance_path():
     """Return the instance path for the user to manually replace the file"""
     return app.instance_path
 
+@app.route('/browser-test')
+def browser_test():
+    """Diagnostic page for browser issues"""
+    return render_template('test.html')
+
 # Handle CSRF errors more gracefully
 @app.errorhandler(CSRFError)
 def handle_csrf_error(e):
     flash('Security token expired or invalid. Please try again.', 'error')
     return redirect(request.referrer or url_for('dashboard'))
 
+@app.after_request
+def add_header(response):
+    # Prevent caching for all responses
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '-1'
+    # Add special header to help with AJAX requests
+    response.headers['X-Safari-Fix'] = '1'
+    return response
+
 @app.before_request
 def handle_safari():
-    # Check if we have a safari_fix cookie
-    if request.cookies.get('safari_fix') == 'true':
-        # Extend session lifetime in Safari
+    # Handle timestamp parameter from our Safari fix
+    if '_' in request.args:
         session.permanent = True
-        # For Safari, we might use less strict security settings
-        app.config['SESSION_COOKIE_SAMESITE'] = 'None'

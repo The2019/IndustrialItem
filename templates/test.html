@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Browser Test Page</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+        .info {
+            background-color: #f0f0f0;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        .issue {
+            background-color: #ffe6e6;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        .success {
+            background-color: #e6ffe6;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        button {
+            padding: 8px 15px;
+            margin: 5px;
+            background-color: #66A5AD;
+            border: none;
+            color: white;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Browser Diagnostics</h1>
+    
+    <div class="info" id="browser-info">
+        <h3>Your Browser Information:</h3>
+        <div id="userAgent"></div>
+        <div id="isSafari"></div>
+    </div>
+    
+    <div class="info">
+        <h3>Session & Cookie Test:</h3>
+        <div id="cookies"></div>
+        <button onclick="checkCookies()">Check Cookies</button>
+    </div>
+    
+    <div class="info">
+        <h3>Navigation Test:</h3>
+        <p>Click the button below to test navigation to the dashboard and back:</p>
+        <a href="{{ url_for('dashboard') }}" id="test-link">Go to Dashboard</a>
+        <button onclick="testNavigation()">Automatic Navigation Test</button>
+    </div>
+    
+    <div class="info">
+        <h3>Solutions:</h3>
+        <button onclick="forceReload()">Force Page Reload</button>
+        <button onclick="clearCache()">Clear Cache & Cookies</button>
+    </div>
+
+    <script>
+        // Display user agent info
+        document.getElementById('userAgent').textContent = 'User Agent: ' + navigator.userAgent;
+        
+        // Check if using Safari
+        const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+        document.getElementById('isSafari').textContent = 'Using Safari: ' + isSafari;
+        
+        if (isSafari) {
+            const warning = document.createElement('div');
+            warning.className = 'issue';
+            warning.innerHTML = '<strong>Safari Detected!</strong> This browser may have issues with the application.';
+            document.body.insertBefore(warning, document.body.firstChild);
+        }
+        
+        // Check cookies
+        function checkCookies() {
+            const cookieDiv = document.getElementById('cookies');
+            cookieDiv.innerHTML = '';
+            
+            if (document.cookie) {
+                document.cookie.split(';').forEach(cookie => {
+                    const p = document.createElement('p');
+                    p.textContent = cookie.trim();
+                    cookieDiv.appendChild(p);
+                });
+            } else {
+                cookieDiv.innerHTML = '<p>No cookies found!</p>';
+            }
+        }
+        
+        // Test navigation
+        function testNavigation() {
+            const link = document.getElementById('test-link');
+            
+            // Add timestamp parameter
+            let url = link.href;
+            if (url.indexOf('?') === -1) {
+                url += '?_=' + new Date().getTime();
+            } else {
+                url += '&_=' + new Date().getTime();
+            }
+            
+            // Navigate
+            window.location.href = url;
+        }
+        
+        // Force reload
+        function forceReload() {
+            window.location.reload(true);
+        }
+        
+        // Clear cache and cookies
+        function clearCache() {
+            // Clear all cookies
+            document.cookie.split(';').forEach(function(c) {
+                document.cookie = c.trim().split('=')[0] + '=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;';
+            });
+            
+            // Clear localStorage
+            localStorage.clear();
+            
+            // Clear sessionStorage
+            sessionStorage.clear();
+            
+            // Reload page
+            window.location.reload(true);
+        }
+        
+        // Force page reload on back/forward navigation
+        window.addEventListener('pageshow', function(event) {
+            if (event.persisted) {
+                window.location.reload();
+            }
+        });
+    </script>
+</body>
+</html> 

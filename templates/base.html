@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>{% block title %}{{ t('inventory_management') }}{% endblock %}</title>
 
     <!-- Favicon -->
@@ -234,6 +237,7 @@
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/safari-fix.js') }}"></script>
     <script>
         function confirmDelete(event) {
             if (!confirm('{{ t('confirm_delete') }}')) {
@@ -241,49 +245,29 @@
             }
         }
         
-        // Safari-specific fix for navigation issues
+        // Fix for Safari navigation issues
         document.addEventListener('DOMContentLoaded', function() {
-            // Detect Safari
-            const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+            // Get all navigation links
+            var links = document.querySelectorAll('.sidebar a');
             
-            if (isSafari) {
-                // Fix all navigation links in sidebar
-                const navLinks = document.querySelectorAll('.sidebar a');
-                navLinks.forEach(link => {
-                    link.addEventListener('click', function(e) {
-                        // Store the href
-                        const href = this.getAttribute('href');
-                        
-                        // Add a loading class to body
-                        document.body.classList.add('loading');
-                        
-                        // Add cookie to indicate we're in Safari
-                        document.cookie = "safari_fix=true; path=/";
-                        
-                        // Prevent the default redirect momentarily
-                        if (!e.ctrlKey && !e.metaKey) {
-                            e.preventDefault();
-                            
-                            // Redirect after a very small delay
-                            setTimeout(function() {
-                                window.location.href = href;
-                            }, 50);
-                        }
-                    });
-                });
-                
-                // Fix form submissions
-                const forms = document.querySelectorAll('form');
-                forms.forEach(form => {
-                    if (!form.hasAttribute('data-safari-fixed')) {
-                        form.setAttribute('data-safari-fixed', 'true');
-                        form.addEventListener('submit', function(e) {
-                            // Add cookie to indicate we're in Safari
-                            document.cookie = "safari_fix=true; path=/";
-                        });
+            // Add click handler to each link
+            links.forEach(function(link) {
+                link.addEventListener('click', function(e) {
+                    // Force no caching
+                    var url = this.href;
+                    if (url.indexOf('?') === -1) {
+                        url += '?_=' + new Date().getTime();
+                    } else {
+                        url += '&_=' + new Date().getTime();
                     }
+                    
+                    // Hard redirect with cache busting
+                    window.location.href = url;
+                    
+                    // Prevent default navigation
+                    e.preventDefault();
                 });
-            }
+            });
         });
     </script>
     {% block extra_js %}{% endblock %}
