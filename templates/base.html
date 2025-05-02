@@ -165,6 +165,30 @@
                 margin-left: 0;
             }
         }
+        
+        /* Loading state for Safari fix */
+        body.loading {
+            cursor: wait;
+            pointer-events: none;
+        }
+        
+        body.loading::after {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background-color: {{ secondary_color or '#66A5AD' }};
+            animation: loading 2s infinite;
+            z-index: 9999;
+        }
+        
+        @keyframes loading {
+            0% { width: 0; }
+            50% { width: 50%; }
+            100% { width: 100%; }
+        }
     </style>
 </head>
 <body>
@@ -216,6 +240,51 @@
                 event.preventDefault();
             }
         }
+        
+        // Safari-specific fix for navigation issues
+        document.addEventListener('DOMContentLoaded', function() {
+            // Detect Safari
+            const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+            
+            if (isSafari) {
+                // Fix all navigation links in sidebar
+                const navLinks = document.querySelectorAll('.sidebar a');
+                navLinks.forEach(link => {
+                    link.addEventListener('click', function(e) {
+                        // Store the href
+                        const href = this.getAttribute('href');
+                        
+                        // Add a loading class to body
+                        document.body.classList.add('loading');
+                        
+                        // Add cookie to indicate we're in Safari
+                        document.cookie = "safari_fix=true; path=/";
+                        
+                        // Prevent the default redirect momentarily
+                        if (!e.ctrlKey && !e.metaKey) {
+                            e.preventDefault();
+                            
+                            // Redirect after a very small delay
+                            setTimeout(function() {
+                                window.location.href = href;
+                            }, 50);
+                        }
+                    });
+                });
+                
+                // Fix form submissions
+                const forms = document.querySelectorAll('form');
+                forms.forEach(form => {
+                    if (!form.hasAttribute('data-safari-fixed')) {
+                        form.setAttribute('data-safari-fixed', 'true');
+                        form.addEventListener('submit', function(e) {
+                            // Add cookie to indicate we're in Safari
+                            document.cookie = "safari_fix=true; path=/";
+                        });
+                    }
+                });
+            }
+        });
     </script>
     {% block extra_js %}{% endblock %}
 </body>

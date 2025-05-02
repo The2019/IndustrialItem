@@ -25,7 +25,7 @@ app.config['ALLOWED_EXTENSIONS'] = {'pdf', 'doc', 'docx', 'txt', 'xlsx'}
 # Session configuration
 app.config['SESSION_COOKIE_SECURE'] = False  # Set to True if using HTTPS
 app.config['SESSION_COOKIE_HTTPONLY'] = True
-app.config['SESSION_COOKIE_SAMESITE'] = 'None'  # Changed from 'Lax' to 'None' for Docker environments
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # Default for most browsers
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=1)
 app.config['SESSION_TYPE'] = 'filesystem'  # Added explicit session type
 app.config['SESSION_FILE_DIR'] = '/tmp/flask_session'  # Path that will be accessible in Docker
@@ -778,3 +778,12 @@ def get_instance_path():
 def handle_csrf_error(e):
     flash('Security token expired or invalid. Please try again.', 'error')
     return redirect(request.referrer or url_for('dashboard'))
+
+@app.before_request
+def handle_safari():
+    # Check if we have a safari_fix cookie
+    if request.cookies.get('safari_fix') == 'true':
+        # Extend session lifetime in Safari
+        session.permanent = True
+        # For Safari, we might use less strict security settings
+        app.config['SESSION_COOKIE_SAMESITE'] = 'None'
