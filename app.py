@@ -21,6 +21,10 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///inventory.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'uploads/'  # Folder for storing files
 app.config['ALLOWED_EXTENSIONS'] = {'pdf', 'doc', 'docx', 'txt', 'xlsx'}
+app.config['PREFERRED_URL_SCHEME'] = 'http'  # Use 'https' if you're using HTTPS
+app.config['SERVER_NAME'] = os.environ.get('SERVER_NAME', None)  # Allow dynamic hostname in Docker
+app.config['STATIC_FOLDER'] = 'static'  # Ensure static folder is explicitly set
+app.config['STATIC_URL_PATH'] = '/static'  # Explicitly set the URL path for static files
 
 # Session configuration
 app.config['SESSION_COOKIE_SECURE'] = False
