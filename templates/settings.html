@@ -18,9 +18,9 @@
                             <h5 class="card-title mb-0">{{ t('export_data') or 'Export Data' }}</h5>
                         </div>
                         <div class="card-body">
-                            <p>{{ t('export_description') or 'Export all inventory data to a CSV file for backup or transfer.' }}</p>
-                            <a href="{{ url_for('export_csv') }}" class="btn btn-custom">
-                                <i class="fas fa-download me-2"></i>{{ t('export_to_csv') or 'Export to CSV' }}
+                            <p>{{ t('export_description') or 'Export the entire database for backup or transfer.' }}</p>
+                            <a href="{{ url_for('export_db') }}" class="btn btn-custom">
+                                <i class="fas fa-download me-2"></i>{{ t('export_database') or 'Export Database' }}
                             </a>
                         </div>
                     </div>
@@ -31,14 +31,14 @@
                             <h5 class="card-title mb-0">{{ t('import_data') or 'Import Data' }}</h5>
                         </div>
                         <div class="card-body">
-                            <p>{{ t('import_description') or 'Import inventory data from a previously exported ZIP file.' }}</p>
-                            <form method="POST" action="{{ url_for('import_csv') }}" enctype="multipart/form-data">
+                            <p>{{ t('import_description') or 'Import a previously exported database file.' }}</p>
+                            <form method="POST" action="{{ url_for('import_db') }}" enctype="multipart/form-data">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <div class="mb-3">
-                                    <input type="file" class="form-control" id="import_file" name="import_file" accept=".zip">
+                                    <input type="file" class="form-control" id="import_file" name="import_file" accept=".db">
                                 </div>
-                                <button type="submit" class="btn btn-custom">
-                                    <i class="fas fa-upload me-2"></i>{{ t('import_from_csv') or 'Import from CSV' }}
+                                <button type="submit" class="btn btn-custom" id="importDatabaseBtn">
+                                    <i class="fas fa-upload me-2"></i>{{ t('import_database') or 'Import Database' }}
                                 </button>
                             </form>
                         </div>
@@ -316,6 +316,20 @@ document.addEventListener('DOMContentLoaded', function() {
     // Clear category input if clear_input is in URL
     if (window.location.search.includes('clear_input=1')) {
         document.getElementById('categoryInput').value = '';
+    }
+    
+    // Add event listener for database import form
+    const importForm = document.querySelector('form[action="/import_db"]');
+    if (importForm) {
+        importForm.addEventListener('submit', function(e) {
+            console.log('Form submitted');
+            const fileInput = this.querySelector('input[name="import_file"]');
+            if (fileInput && fileInput.files.length > 0) {
+                console.log('File selected:', fileInput.files[0].name);
+            } else {
+                console.log('No file selected');
+            }
+        });
     }
 });
 

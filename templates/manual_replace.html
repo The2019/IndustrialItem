@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+
+{% block title %}Manual Database Replacement{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card">
+                <div class="card-header" style="background-color: {{ secondary_color or '#66A5AD' }}">
+                    <h2 class="mb-0 text-white">Manual Database Replacement</h2>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <h4 class="alert-heading"><i class="fas fa-info-circle me-2"></i>Your Database is Ready</h4>
+                        <p>Your database file has been uploaded and is ready for manual installation.</p>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h5 class="mb-3">Step 1: Download the Database File</h5>
+                        {% if db_filename %}
+                        <a href="{{ url_for('download_document', filename=db_filename) }}" class="btn btn-primary">
+                            <i class="fas fa-download me-2"></i>Download Database File
+                        </a>
+                        {% else %}
+                        <div class="alert alert-warning">No database file found in session. Please try uploading again.</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h5 class="mb-3">Step 2: Replace the Existing Database</h5>
+                        <ol>
+                            <li><strong>Stop the server</strong> by pressing Ctrl+C in the terminal where it's running</li>
+                            <li>Navigate to the instance folder of your application
+                                <code id="instancePath" class="d-block bg-light p-2 mt-2 mb-2">{{ instance_path }}</code>
+                                <button onclick="copyToClipboard('instancePath')" class="btn btn-sm btn-secondary">
+                                    <i class="fas fa-copy me-1"></i>Copy
+                                </button>
+                            </li>
+                            <li>Rename the downloaded database file to <code>inventory.db</code></li>
+                            <li>Replace the existing <code>inventory.db</code> in the instance folder with your renamed file</li>
+                            <li>Start the server again</li>
+                        </ol>
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <strong>Important:</strong> Make sure the server is completely stopped before replacing the database file.
+                    </div>
+                    
+                    <div class="mt-4">
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Return to Dashboard
+                        </a>
+                        <a href="{{ url_for('settings') }}" class="btn btn-primary ms-2">
+                            <i class="fas fa-cog me-2"></i>Return to Settings
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function copyToClipboard(elementId) {
+    const element = document.getElementById(elementId);
+    const text = element.textContent;
+    
+    navigator.clipboard.writeText(text).then(function() {
+        // Show brief "Copied!" feedback
+        const originalText = element.innerHTML;
+        element.innerHTML = 'Copied to clipboard!';
+        setTimeout(function() {
+            element.innerHTML = originalText;
+        }, 1500);
+    }).catch(function(err) {
+        console.error('Could not copy text: ', err);
+    });
+}
+</script>
+{% endblock %} 

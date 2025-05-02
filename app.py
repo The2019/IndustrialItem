@@ -13,6 +13,7 @@ import io
 import zipfile
 from werkzeug.datastructures import FileStorage
 from flask_wtf.csrf import CSRFError, generate_csrf
+from flask_session import Session  # Added Flask-Session extension
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key')
@@ -24,13 +25,20 @@ app.config['ALLOWED_EXTENSIONS'] = {'pdf', 'doc', 'docx', 'txt', 'xlsx'}
 # Session configuration
 app.config['SESSION_COOKIE_SECURE'] = False  # Set to True if using HTTPS
 app.config['SESSION_COOKIE_HTTPONLY'] = True
-app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['SESSION_COOKIE_SAMESITE'] = 'None'  # Changed from 'Lax' to 'None' for Docker environments
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=1)
+app.config['SESSION_TYPE'] = 'filesystem'  # Added explicit session type
+app.config['SESSION_FILE_DIR'] = '/tmp/flask_session'  # Path that will be accessible in Docker
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 
 # Initialize CSRF protection with updated settings
 csrf = CSRFProtect(app)
 csrf.init_app(app)
+
+# Initialize Flask-Session
+if not os.path.exists(app.config['SESSION_FILE_DIR']):
+    os.makedirs(app.config['SESSION_FILE_DIR'])
+Session(app)
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
@@ -381,7 +389,21 @@ def allowed_file(filename):
 
 @app.route('/uploads/<path:filename>')
 def download_document(filename):
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename, as_attachment=True)
+    print(f"Attempting to download file: {filename}")
+    try:
+        # First check if this is a database file
+        if filename.startswith('new_inventory_') and filename.endswith('.db'):
+            print(f"This is a database file: {filename}")
+            upload_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), app.config['UPLOAD_FOLDER'])
+            return send_from_directory(upload_dir, filename, as_attachment=True)
+        else:
+            # For regular documents
+            print(f"This is a regular document: {filename}")
+            return send_from_directory(app.config['UPLOAD_FOLDER'], filename, as_attachment=True)
+    except Exception as e:
+        print(f"Error downloading file: {str(e)}")
+        flash(f"Error downloading file: {str(e)}", 'error')
+        return redirect(url_for('dashboard'))
 
 @app.route('/edit_document/<int:document_id>', methods=['GET', 'POST'])
 def edit_document(document_id):
@@ -605,7 +627,8 @@ def inject_theme_colors():
 
 @app.context_processor
 def inject_csrf_token():
-    return dict(csrf_token=lambda: '<input type="hidden" name="csrf_token" value="{0}">'.format(generate_csrf()))
+    token = generate_csrf()
+    return dict(csrf_token=lambda: '<input type="hidden" name="csrf_token" value="{0}">'.format(token))
 
 @app.route('/edit_project/<int:project_id>', methods=['GET', 'POST'])
 def edit_project(project_id):
@@ -663,392 +686,92 @@ def edit_project(project_id):
                          items_data=items_data,
                          documents_data=documents_data)
 
-@app.route('/export_csv')
-def export_csv():
+@app.route('/export_db')
+def export_db():
     try:
-        # Create a memory file to store all CSV files
-        memory_file = io.BytesIO()
-        with zipfile.ZipFile(memory_file, 'w') as zf:
-            # Export items
-            items_csv = io.StringIO()
-            items_writer = csv.writer(items_csv)
-            items_writer.writerow(['id', 'name', 'quantity', 'min_stock_level', 'category_id', 'location_id', 'material_id', 'color_id'])
-            for item in Item.query.all():
-                items_writer.writerow([
-                    item.id, item.name, item.quantity, item.min_stock_level,
-                    item.category_id, item.location_id, item.material_id, item.color_id
-                ])
-            zf.writestr('items.csv', items_csv.getvalue())
-
-            # Export categories
-            categories_csv = io.StringIO()
-            categories_writer = csv.writer(categories_csv)
-            categories_writer.writerow(['id', 'name'])
-            for category in Category.query.all():
-                categories_writer.writerow([category.id, category.name])
-            zf.writestr('categories.csv', categories_csv.getvalue())
-
-            # Export locations
-            locations_csv = io.StringIO()
-            locations_writer = csv.writer(locations_csv)
-            locations_writer.writerow(['id', 'name'])
-            for location in Location.query.all():
-                locations_writer.writerow([location.id, location.name])
-            zf.writestr('locations.csv', locations_csv.getvalue())
-
-            # Export materials
-            materials_csv = io.StringIO()
-            materials_writer = csv.writer(materials_csv)
-            materials_writer.writerow(['id', 'name'])
-            for material in Material.query.all():
-                materials_writer.writerow([material.id, material.name])
-            zf.writestr('materials.csv', materials_csv.getvalue())
-
-            # Export colors
-            colors_csv = io.StringIO()
-            colors_writer = csv.writer(colors_csv)
-            colors_writer.writerow(['id', 'name'])
-            for color in Color.query.all():
-                colors_writer.writerow([color.id, color.name])
-            zf.writestr('colors.csv', colors_csv.getvalue())
-
-            # Export document categories
-            doc_categories_csv = io.StringIO()
-            doc_categories_writer = csv.writer(doc_categories_csv)
-            doc_categories_writer.writerow(['id', 'name'])
-            for doc_category in DocumentCategory.query.all():
-                doc_categories_writer.writerow([doc_category.id, doc_category.name])
-            zf.writestr('document_categories.csv', doc_categories_csv.getvalue())
-
-            # Export documents
-            documents_csv = io.StringIO()
-            documents_writer = csv.writer(documents_csv)
-            documents_writer.writerow(['id', 'name', 'category_id', 'file_path'])
-            for document in Document.query.all():
-                documents_writer.writerow([document.id, document.name, document.category_id, document.file_path])
-            zf.writestr('documents.csv', documents_csv.getvalue())
-
-            # Export projects
-            projects_csv = io.StringIO()
-            projects_writer = csv.writer(projects_csv)
-            projects_writer.writerow(['id', 'name', 'description'])
-            for project in Project.query.all():
-                projects_writer.writerow([project.id, project.name, project.description])
-            zf.writestr('projects.csv', projects_csv.getvalue())
-
-            # Export project items
-            project_items_csv = io.StringIO()
-            project_items_writer = csv.writer(project_items_csv)
-            project_items_writer.writerow(['id', 'project_id', 'item_id', 'quantity'])
-            for project_item in ProjectItem.query.all():
-                project_items_writer.writerow([
-                    project_item.id, project_item.project_id, 
-                    project_item.item_id, project_item.quantity
-                ])
-            zf.writestr('project_items.csv', project_items_csv.getvalue())
-
-            # Export project documents
-            project_documents_csv = io.StringIO()
-            project_documents_writer = csv.writer(project_documents_csv)
-            project_documents_writer.writerow(['id', 'project_id', 'document_id'])
-            for project_document in ProjectDocument.query.all():
-                project_documents_writer.writerow([
-                    project_document.id, project_document.project_id, 
-                    project_document.document_id
-                ])
-            zf.writestr('project_documents.csv', project_documents_csv.getvalue())
-
-        # Reset the file pointer to the beginning
-        memory_file.seek(0)
+        # Get the database file path
+        db_path = os.path.join(app.instance_path, 'inventory.db')
         
+        # Create a timestamp for the filename
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        return Response(
-            memory_file.getvalue(),
-            mimetype='application/zip',
-            headers={'Content-Disposition': f'attachment;filename=inventory_export_{timestamp}.zip'}
+        filename = f'inventory_db_{timestamp}.db'
+        
+        # Send the file
+        return send_from_directory(
+            app.instance_path,
+            'inventory.db',
+            as_attachment=True,
+            download_name=filename
         )
     except Exception as e:
-        flash(f'Error exporting data: {str(e)}', 'error')
+        flash(f'Error exporting database: {str(e)}', 'error')
         return redirect(url_for('settings'))
 
-@app.route('/import_csv', methods=['POST'])
-def import_csv():
-    # Create uploads folder if it doesn't exist
-    if not os.path.exists(app.config['UPLOAD_FOLDER']):
-        os.makedirs(app.config['UPLOAD_FOLDER'])
-    
-    # Reset any pending transaction
-    db.session.rollback()
-    
+@app.route('/import_db', methods=['POST'])
+def import_db():
     try:
+        print("Starting database import process...")
+        
         if 'import_file' not in request.files:
+            print("No file part in request")
             flash('No file part', 'error')
             return redirect(url_for('settings'))
         
         uploaded_file = request.files['import_file']
+        print(f"File received: {uploaded_file.filename}")
+        
         if uploaded_file.filename == '':
+            print("No file selected")
             flash('No selected file', 'error')
             return redirect(url_for('settings'))
         
-        if not uploaded_file.filename.endswith('.zip'):
-            flash('Only ZIP files are allowed', 'error')
+        if not uploaded_file.filename.endswith('.db'):
+            print(f"Invalid file type: {uploaded_file.filename}")
+            flash('Only .db files are allowed', 'error')
             return redirect(url_for('settings'))
         
-        # Save the file to a temporary location
-        temp_path = os.path.join(app.config['UPLOAD_FOLDER'], 'temp_import.zip')
-        uploaded_file.save(temp_path)
-        print(f"Saved uploaded file to {temp_path}")
+        # Create uploads folder if it doesn't exist
+        upload_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), app.config['UPLOAD_FOLDER'])
+        if not os.path.exists(upload_dir):
+            print(f"Creating upload directory: {upload_dir}")
+            os.makedirs(upload_dir)
         
-        # Create a clean directory for extraction
-        extract_dir = os.path.join(app.config['UPLOAD_FOLDER'], 'extracted')
-        if os.path.exists(extract_dir):
-            import shutil
-            shutil.rmtree(extract_dir)
-        os.makedirs(extract_dir)
-        print(f"Created extraction directory: {extract_dir}")
+        print(f"Upload directory: {upload_dir}")
+            
+        # Save the uploaded file with a unique name
+        safe_filename = f"new_inventory_{datetime.now().strftime('%Y%m%d_%H%M%S')}.db"
+        save_path = os.path.join(upload_dir, safe_filename)
+        print(f"Saving file to: {save_path}")
         
-        # Extract the ZIP file - using the Python standard library
-        with zipfile.ZipFile(temp_path, 'r') as zip_ref:
-            zip_ref.extractall(extract_dir)
-            print(f"Extracted files: {os.listdir(extract_dir)}")
+        uploaded_file.save(save_path)
+        print(f"File saved successfully to {save_path}")
         
-        # Create a basic import for categories
-        categories_file = os.path.join(extract_dir, 'categories.csv')
-        if os.path.exists(categories_file):
-            print(f"Found categories file: {categories_file}")
-            try:
-                # Read and display file content for debugging
-                with open(categories_file, 'r', encoding='utf-8') as f:
-                    content = f.read()
-                    print(f"Categories file content (first 200 chars): {content[:200]}")
-                
-                # Import categories
-                with open(categories_file, 'r', encoding='utf-8') as f:
-                    reader = csv.reader(f)
-                    header = next(reader)  # Skip header
-                    print(f"Categories header: {header}")
-                    count = 0
-                    for row in reader:
-                        if len(row) > 1 and row[1]:  # Assuming 2nd column is name
-                            category_name = row[1].strip()
-                            print(f"Processing category: {category_name}")
-                            existing = Category.query.filter_by(name=category_name).first()
-                            if not existing:
-                                category = Category(name=category_name)
-                                db.session.add(category)
-                                count += 1
-                    db.session.commit()
-                    print(f"Added {count} categories")
-                    flash(f"Added {count} categories", "success")
-            except Exception as e:
-                print(f"Error processing categories: {str(e)}")
-                import traceback
-                traceback.print_exc()
+        # Store the path in session for download
+        session['new_db_path'] = safe_filename
+        print(f"Stored file path in session: {safe_filename}")
         
-        # Create a basic import for materials
-        materials_file = os.path.join(extract_dir, 'materials.csv')
-        if os.path.exists(materials_file):
-            print(f"Found materials file: {materials_file}")
-            try:
-                # Import materials
-                with open(materials_file, 'r', encoding='utf-8') as f:
-                    reader = csv.reader(f)
-                    header = next(reader)  # Skip header
-                    print(f"Materials header: {header}")
-                    count = 0
-                    for row in reader:
-                        if len(row) > 1 and row[1]:  # Assuming 2nd column is name
-                            material_name = row[1].strip()
-                            print(f"Processing material: {material_name}")
-                            existing = Material.query.filter_by(name=material_name).first()
-                            if not existing:
-                                material = Material(name=material_name)
-                                db.session.add(material)
-                                count += 1
-                    db.session.commit()
-                    print(f"Added {count} materials")
-                    flash(f"Added {count} materials", "success")
-            except Exception as e:
-                print(f"Error processing materials: {str(e)}")
-                import traceback
-                traceback.print_exc()
-        
-        # Create a basic import for colors
-        colors_file = os.path.join(extract_dir, 'colors.csv')
-        if os.path.exists(colors_file):
-            print(f"Found colors file: {colors_file}")
-            try:
-                # Import colors
-                with open(colors_file, 'r', encoding='utf-8') as f:
-                    reader = csv.reader(f)
-                    header = next(reader)  # Skip header
-                    print(f"Colors header: {header}")
-                    count = 0
-                    for row in reader:
-                        if len(row) > 1 and row[1]:  # Assuming 2nd column is name
-                            color_name = row[1].strip()
-                            print(f"Processing color: {color_name}")
-                            existing = Color.query.filter_by(name=color_name).first()
-                            if not existing:
-                                color = Color(name=color_name)
-                                db.session.add(color)
-                                count += 1
-                    db.session.commit()
-                    print(f"Added {count} colors")
-                    flash(f"Added {count} colors", "success")
-            except Exception as e:
-                print(f"Error processing colors: {str(e)}")
-                import traceback
-                traceback.print_exc()
-        
-        # Create a basic import for locations
-        locations_file = os.path.join(extract_dir, 'locations.csv')
-        if os.path.exists(locations_file):
-            print(f"Found locations file: {locations_file}")
-            try:
-                # Import locations
-                with open(locations_file, 'r', encoding='utf-8') as f:
-                    reader = csv.reader(f)
-                    header = next(reader)  # Skip header
-                    print(f"Locations header: {header}")
-                    count = 0
-                    for row in reader:
-                        if len(row) > 1 and row[1]:  # Assuming 2nd column is name
-                            location_name = row[1].strip()
-                            print(f"Processing location: {location_name}")
-                            existing = Location.query.filter_by(name=location_name).first()
-                            if not existing:
-                                location = Location(name=location_name)
-                                db.session.add(location)
-                                count += 1
-                    db.session.commit()
-                    print(f"Added {count} locations")
-                    flash(f"Added {count} locations", "success")
-            except Exception as e:
-                print(f"Error processing locations: {str(e)}")
-                import traceback
-                traceback.print_exc()
-        
-        # Create a basic import for document categories
-        doc_categories_file = os.path.join(extract_dir, 'document_categories.csv')
-        if os.path.exists(doc_categories_file):
-            print(f"Found document categories file: {doc_categories_file}")
-            try:
-                # Import document categories
-                with open(doc_categories_file, 'r', encoding='utf-8') as f:
-                    reader = csv.reader(f)
-                    header = next(reader)  # Skip header
-                    print(f"Document categories header: {header}")
-                    count = 0
-                    for row in reader:
-                        if len(row) > 1 and row[1]:  # Assuming 2nd column is name
-                            doc_category_name = row[1].strip()
-                            print(f"Processing document category: {doc_category_name}")
-                            existing = DocumentCategory.query.filter_by(name=doc_category_name).first()
-                            if not existing:
-                                doc_category = DocumentCategory(name=doc_category_name)
-                                db.session.add(doc_category)
-                                count += 1
-                    db.session.commit()
-                    print(f"Added {count} document categories")
-                    flash(f"Added {count} document categories", "success")
-            except Exception as e:
-                print(f"Error processing document categories: {str(e)}")
-                import traceback
-                traceback.print_exc()
-        
-        # Now import items
-        items_file = os.path.join(extract_dir, 'items.csv')
-        if os.path.exists(items_file):
-            print(f"Found items file: {items_file}")
-            try:
-                # Read and display file content for debugging
-                with open(items_file, 'r', encoding='utf-8') as f:
-                    content = f.read()
-                    print(f"Items file content (first 200 chars): {content[:200]}")
-                
-                # Import items
-                with open(items_file, 'r', encoding='utf-8') as f:
-                    reader = csv.reader(f)
-                    header = next(reader)  # Skip header
-                    print(f"Items header: {header}")
-                    
-                    # Find the index of each column
-                    name_idx = header.index('name') if 'name' in header else 1
-                    quantity_idx = header.index('quantity') if 'quantity' in header else 2
-                    min_stock_idx = header.index('min_stock_level') if 'min_stock_level' in header else 3
-                    
-                    count = 0
-                    for row in reader:
-                        if len(row) > name_idx and row[name_idx]:
-                            try:
-                                item_name = row[name_idx].strip()
-                                print(f"Processing item: {item_name}")
-                                
-                                # Skip if item already exists
-                                if Item.query.filter_by(name=item_name).first():
-                                    print(f"Item {item_name} already exists, skipping.")
-                                    continue
-                                
-                                # Get quantity and min_stock
-                                quantity = 0
-                                if len(row) > quantity_idx and row[quantity_idx]:
-                                    try:
-                                        quantity = int(row[quantity_idx])
-                                    except ValueError:
-                                        print(f"Invalid quantity for {item_name}: {row[quantity_idx]}")
-                                
-                                min_stock = 0
-                                if len(row) > min_stock_idx and row[min_stock_idx]:
-                                    try:
-                                        min_stock = int(row[min_stock_idx])
-                                    except ValueError:
-                                        print(f"Invalid min_stock for {item_name}: {row[min_stock_idx]}")
-                                
-                                # Create a new item
-                                item = Item(
-                                    name=item_name,
-                                    quantity=quantity,
-                                    min_stock_level=min_stock
-                                )
-                                db.session.add(item)
-                                count += 1
-                                
-                                # Commit every 10 items to avoid long transactions
-                                if count % 10 == 0:
-                                    db.session.commit()
-                                    print(f"Committed batch, total so far: {count}")
-                            except Exception as e:
-                                print(f"Error processing item {row}: {str(e)}")
-                                continue
-                    
-                    # Final commit
-                    db.session.commit()
-                    print(f"Added {count} items")
-                    flash(f"Added {count} items", "success")
-            except Exception as e:
-                print(f"Error processing items: {str(e)}")
-                import traceback
-                traceback.print_exc()
-        
-        # Clean up
-        try:
-            import shutil
-            shutil.rmtree(extract_dir)
-            os.remove(temp_path)
-            print("Cleaned up temporary files")
-        except Exception as e:
-            print(f"Error cleaning up: {str(e)}")
-        
-        return redirect(url_for('settings'))
+        # Redirect to a success page with download link
+        flash('Database uploaded. You can now download it and manually replace your database file.', 'success')
+        print("Redirecting to manual replacement page")
+        return redirect(url_for('manual_db_replace'))
         
     except Exception as e:
-        db.session.rollback()
-        flash(f"Import error: {str(e)}", "error")
-        print(f"General import error: {str(e)}")
         import traceback
+        print(f"Error during import: {str(e)}")
         traceback.print_exc()
+        flash(f'Error processing database: {str(e)}', 'error')
         return redirect(url_for('settings'))
+
+@app.route('/manual_db_replace')
+def manual_db_replace():
+    db_filename = session.get('new_db_path')
+    instance_path = app.instance_path
+    return render_template('manual_replace.html', db_filename=db_filename, instance_path=instance_path)
+
+@app.route('/get_instance_path')
+def get_instance_path():
+    """Return the instance path for the user to manually replace the file"""
+    return app.instance_path
 
 # Handle CSRF errors more gracefully
 @app.errorhandler(CSRFError)

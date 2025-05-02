@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}Restart Required{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header" style="background-color: {{ secondary_color or '#66A5AD' }}">
+                    <h2 class="mb-0 text-white">Server Restart Required</h2>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <h4 class="alert-heading"><i class="fas fa-exclamation-triangle me-2"></i>Database Import Pending</h4>
+                        <p>Your database file has been uploaded and is ready to be imported. To complete the import process, you need to <strong>restart the server</strong>.</p>
+                    </div>
+                    
+                    <h5>How to restart the server:</h5>
+                    <ol class="mb-4">
+                        <li>Stop the current server process (press Ctrl+C in the terminal where the server is running)</li>
+                        <li>Restart the server by running <code>python run.py</code> (or the command you normally use)</li>
+                        <li>The database will be automatically imported when the server starts</li>
+                    </ol>
+                    
+                    <p>After restarting, your imported database will be active and you can continue using the application.</p>
+                    
+                    <div class="mt-4 d-flex justify-content-between">
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Return to Dashboard
+                        </a>
+                        <a href="{{ url_for('settings') }}" class="btn btn-primary">
+                            <i class="fas fa-cog me-2"></i>Return to Settings
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
